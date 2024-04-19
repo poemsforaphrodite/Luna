@@ -1,7 +1,8 @@
 'use strict';
+require('dotenv').config(); 
 
 const heygen_API = {
-  apiKey: 'ZWU5NjgwYjI5Yzk2NDhjYjliYzE0YzI4ODM5ZDlkMGEtMTcxMTc1ODQ4Mw==',
+  apiKey: process.env.HEYGEN_API_KEY,
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -282,6 +283,19 @@ async function talkToOpenAI(prompt) {
     return data.text;
   }
 }
+document.addEventListener('DOMContentLoaded', function() {
+  const webcamElement = document.getElementById('webcamElement');
+
+  // Access the user's webcam
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+      webcamElement.srcObject = stream;
+    })
+    .catch(function(error) {
+      console.error('Error accessing the webcam', error);
+    });
+});
+
 
 // repeat the text
 async function repeat(session_id, text) {

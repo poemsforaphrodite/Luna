@@ -2,11 +2,12 @@ const express = require('express');
 const OpenAI = require('openai')
 const path = require('path');
 const app = express();
+require('dotenv').config(); 
 app.use(express.json());
 
 
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: process.env.OPENAI_API_KEY, // Access the API key securely
 });
 
 const systemSetup = "You are an expert programmer."
