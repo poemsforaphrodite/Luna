@@ -2,7 +2,7 @@
 //require('dotenv').config(); 
 
 const heygen_API = {
-  apiKey: 'NWNjODg3YTQ2OTdjNGQ1MmI0OThkOWNkYzRlNTU2N2MtMTcxMTgwNTc0MA==',
+  apiKey: 'MjNhMDMwNGQ3OTNiNDZiYWE1NDEwMjEyMjNlZDMwY2MtMTcxMzYxMTA5NQ==',
   serverUrl: 'https://api.heygen.com',
 };
 
