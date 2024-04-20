@@ -1,8 +1,8 @@
 'use strict';
-require('dotenv').config(); 
+//require('dotenv').config(); 
 
 const heygen_API = {
-  apiKey: process.env.HEYGEN_API_KEY,
+  apiKey: 'NWNjODg3YTQ2OTdjNGQ1MmI0OThkOWNkYzRlNTU2N2MtMTcxMTgwNTc0MA==',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -283,18 +283,6 @@ async function talkToOpenAI(prompt) {
     return data.text;
   }
 }
-document.addEventListener('DOMContentLoaded', function() {
-  const webcamElement = document.getElementById('webcamElement');
-
-  // Access the user's webcam
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(function(stream) {
-      webcamElement.srcObject = stream;
-    })
-    .catch(function(error) {
-      console.error('Error accessing the webcam', error);
-    });
-});
 
 
 // repeat the text
@@ -340,10 +328,11 @@ async function stopSession(session_id) {
   }
 }
 
+
 const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
 removeBGCheckbox.addEventListener('click', () => {
   const isChecked = removeBGCheckbox.checked; // status after click
-
+  
   if (isChecked && !sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     removeBGCheckbox.checked = false;
@@ -448,4 +437,84 @@ bgInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     renderCanvas();
   }
+});
+
+// Access the user's webcam// This function sets up the webcam stream and the MediaRecorder
+function setupWebcamAndRecorder() {
+  const webcamElement = document.getElementById('webcamElement');
+
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+          webcamElement.srcObject = stream;
+          setupRecording(stream);
+      })
+      .catch(error => {
+          console.error('Error accessing the webcam:', error);
+      });
+}
+
+// This function sets up the recording using MediaRecorder
+function setupRecording(stream) {
+  const mediaRecorder = new MediaRecorder(stream);
+  let videoChunks = [];
+
+  mediaRecorder.ondataavailable = event => {
+      if (event.data.size > 0) {
+          videoChunks.push(event.data);
+      }
+  };
+
+  mediaRecorder.onstop = () => {
+      const blob = new Blob(videoChunks, { type: 'video/mp4' });
+      sendVideoToServer(blob);
+  };
+
+  // Automatically start recording
+  mediaRecorder.start();
+  console.log('Recording started');
+
+  // Automatically stop recording after 10 seconds
+  setTimeout(() => {
+      mediaRecorder.stop();
+      console.log('Recording stopped');
+  }, 10000);
+}
+
+// This function sends the video blob to the server
+function sendVideoToServer(blob) {
+  const formData = new FormData();
+  formData.append('video', blob, 'recordedVideo.mp4');
+
+  fetch('http://localhost:3000/upload-video', {
+      method: 'POST',
+      body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log('Server response:', data.message);
+  })
+  .catch(error => {
+      console.error('Error uploading video:', error);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('startRecordingBtn').addEventListener('click', setupWebcamAndRecorder);
+});
+
+document.getElementById('transcribeBtn').addEventListener('click', function() {
+  const videoPath = 'uploads/video.mp4'; // This should be the path where your video is stored.
+  fetch('/transcribe-audio', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ videoPath: videoPath })
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log('Transcription:', data.transcription);
+      taskInput.value = data.transcription;
+  })
+  .catch(error => console.error('Error transcribing video:', error));
 });
