@@ -457,6 +457,7 @@ function setupWebcamAndRecorder() {
 function setupRecording(stream) {
   const mediaRecorder = new MediaRecorder(stream);
   let videoChunks = [];
+  const startRecordingBtn = document.getElementById('startRecordingBtn');
 
   mediaRecorder.ondataavailable = event => {
       if (event.data.size > 0) {
@@ -467,18 +468,34 @@ function setupRecording(stream) {
   mediaRecorder.onstop = () => {
       const blob = new Blob(videoChunks, { type: 'video/mp4' });
       sendVideoToServer(blob);
+      startRecordingBtn.textContent = 'Start Recording';
+      startRecordingBtn.classList.remove('recording');
+      console.log('Recording stopped');
+      updateStatus(statusElement, 'Recording stopped');
   };
 
   // Automatically start recording
   mediaRecorder.start();
+  startRecordingBtn.textContent = 'Stop Recording';
+  startRecordingBtn.classList.add('recording');
   console.log('Recording started');
+  updateStatus(statusElement, 'Recording started');
+
+  // Change to stop recording on button click
+  startRecordingBtn.onclick = () => {
+    if (mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+  };
 
   // Automatically stop recording after 10 seconds
   setTimeout(() => {
+    if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
-      console.log('Recording stopped');
+    }
   }, 10000);
 }
+
 
 // This function sends the video blob to the server
 function sendVideoToServer(blob) {
