@@ -238,3 +238,18 @@ input:checked + .slider:before {
   background-color: blue;
   color: white;
 }
+.actionRow {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.actionRow label {
+  margin-right: 20px;
+}
+
+select {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}

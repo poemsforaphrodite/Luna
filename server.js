@@ -17,8 +17,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, 
 });
 
-const systemSetup = "You are an expert programmer.";
-
 // Setup Multer for handling file uploads
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -43,11 +41,29 @@ app.post('/upload-video', upload.single('video'), (req, res) => {
 
 // Route for handling OpenAI completions
 app.post('/openai/complete', async (req, res) => {
+  const { prompt, character } = req.body;
+
+  // Set system prompt based on the character
+  let systemPrompt;
+  switch (character) {
+    case 'Psychologist':
+      systemPrompt = "You are a psychologist.";
+      break;
+    case 'Salesman':
+      systemPrompt = "You are a salesman.";
+      break;
+    case 'Customer Service':
+      systemPrompt = "You are a customer service representative.";
+      break;
+    default:
+      systemPrompt = "You are an assistant."; // Default role if none specified
+      break;
+  }
+
   try {
-    const prompt = req.body.prompt;
     const chatCompletion = await openai.chat.completions.create({
       messages: [
-        { role: 'system', content: systemSetup },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
       model: 'gpt-3.5-turbo',
@@ -58,6 +74,7 @@ app.post('/openai/complete', async (req, res) => {
     res.status(500).send('Error processing your request');
   }
 });
+
 app.post('/transcribe-audio', async (req, res) => {
   const { videoPath } = req.body; // Make sure this is the correct path to the video file
   const audioPath = `uploads/audio.mp3`;

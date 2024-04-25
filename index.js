@@ -2,7 +2,7 @@
 //require('dotenv').config(); 
 
 const heygen_API = {
-  apiKey: 'MjNhMDMwNGQ3OTNiNDZiYWE1NDEwMjEyMjNlZDMwY2MtMTcxMzYxMTA5NQ==',
+  apiKey: 'ZWU5NjgwYjI5Yzk2NDhjYjliYzE0YzI4ODM5ZDlkMGEtMTcxMTc1ODQ4Mw==',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -108,7 +108,6 @@ const taskInput = document.querySelector('#taskInput');
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
-
     return;
   }
   updateStatus(statusElement, 'Sending task... please wait');
@@ -124,11 +123,13 @@ async function repeatHandler() {
 }
 
 async function talkHandler() {
-  if (!sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    return;
-  }
-  const prompt = taskInput.value; // Using the same input for simplicity
+ // FIXME: uncomment this and const resp when deploying
+  // if (!sessionInfo) {
+  //   updateStatus(statusElement, 'Please create a connection first');
+  //   return;
+  // }
+  const prompt = document.querySelector('#taskInput').value;
+  const character = document.querySelector('#characterSelect').value;
   if (prompt.trim() === '') {
     alert('Please enter a prompt for the LLM');
     return;
@@ -137,12 +138,14 @@ async function talkHandler() {
   updateStatus(statusElement, 'Talking to LLM... please wait');
 
   try {
-    const text = await talkToOpenAI(prompt)
-
+    const text = await talkToOpenAI(prompt,character);
+    console.log(text);
     if (text) {
       // Send the AI's response to Heygen's streaming.task API
-      const resp = await repeat(sessionInfo.session_id, text);
+     // const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
+      // Display the AI's response in the status element
+      updateStatus(statusElement, `LLM response: ${text}`);
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
@@ -263,26 +266,22 @@ async function handleICE(session_id, candidate) {
   }
 }
 
-async function talkToOpenAI(prompt) {
-  const response = await fetch(`http://localhost:3000/openai/complete`, {
+async function talkToOpenAI(prompt, character) {
+  // Assuming your server expects a 'prompt' and 'character' in the body
+  const response = await fetch(`/openai/complete`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, character })
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(
-      statusElement,
-      'Server Error. Please make sure to set the openai api key',
-    );
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    return data.text;
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
   }
+  const data = await response.json();
+  return data.text;
 }
+
 
 
 // repeat the text
@@ -509,18 +508,16 @@ function sendVideoToServer(blob) {
   .then(response => response.json())
   .then(data => {
       console.log('Server response:', data.message);
+      // Start transcription process after successful upload
+      startTranscription();
   })
   .catch(error => {
       console.error('Error uploading video:', error);
   });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('startRecordingBtn').addEventListener('click', setupWebcamAndRecorder);
-});
-
-document.getElementById('transcribeBtn').addEventListener('click', function() {
-  const videoPath = 'uploads/video.mp4'; // This should be the path where your video is stored.
+function startTranscription() {
+  const videoPath = 'uploads/video.mp4'; // Update this path if necessary
   fetch('/transcribe-audio', {
       method: 'POST',
       headers: {
@@ -531,7 +528,13 @@ document.getElementById('transcribeBtn').addEventListener('click', function() {
   .then(response => response.json())
   .then(data => {
       console.log('Transcription:', data.transcription);
-      taskInput.value = data.transcription;
+      taskInput.value = data.transcription; // Ensure `taskInput` is correctly defined in your scope
+      document.querySelector('#talkBtn').click();
+      
   })
   .catch(error => console.error('Error transcribing video:', error));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('startRecordingBtn').addEventListener('click', setupWebcamAndRecorder);
 });
