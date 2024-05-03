@@ -124,10 +124,10 @@ async function repeatHandler() {
 
 async function talkHandler() {
  // FIXME: uncomment this and const resp when deploying
-  // if (!sessionInfo) {
-  //   updateStatus(statusElement, 'Please create a connection first');
-  //   return;
-  // }
+  if (!sessionInfo) {
+    updateStatus(statusElement, 'Please create a connection first');
+    return;
+  }
   const prompt = document.querySelector('#taskInput').value;
   const character = document.querySelector('#characterSelect').value;
   if (prompt.trim() === '') {
@@ -142,7 +142,7 @@ async function talkHandler() {
     console.log(text);
     if (text) {
       // Send the AI's response to Heygen's streaming.task API
-     // const resp = await repeat(sessionInfo.session_id, text);
+     const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
       // Display the AI's response in the status element
       updateStatus(statusElement, `LLM response: ${text}`);
@@ -501,7 +501,7 @@ function sendVideoToServer(blob) {
   const formData = new FormData();
   formData.append('video', blob, 'recordedVideo.mp4');
 
-  fetch('https://luna-main.vercel.app/upload-video', {
+  fetch('http://localhost:3000/upload-video', {
       method: 'POST',
       body: formData
   })
