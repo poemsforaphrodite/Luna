@@ -1,5 +1,4 @@
 'use strict';
-//require('dotenv').config(); 
 
 const heygen_API = {
   apiKey: 'ZWU5NjgwYjI5Yzk2NDhjYjliYzE0YzI4ODM5ZDlkMGEtMTcxMTc1ODQ4Mw==',
@@ -29,21 +28,17 @@ function onMessage(event) {
   console.log('Received message:', message);
 }
 
-// Create a new WebRTC session when clicking the "New" button
 async function createNewSession() {
   updateStatus(statusElement, 'Creating new session... please wait');
 
   const avatar = avatarID.value;
   const voice = voiceID.value;
 
-  // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
   sessionInfo = await newSession('low', avatar, voice);
   const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
 
-  // Create a new RTCPeerConnection
   peerConnection = new RTCPeerConnection({ iceServers: iceServers });
 
-  // When audio and video streams are received, display them in the video element
   peerConnection.ontrack = (event) => {
     console.log('Received the track');
     if (event.track.kind === 'audio' || event.track.kind === 'video') {
@@ -51,13 +46,11 @@ async function createNewSession() {
     }
   };
 
-  // When receiving a message, display it in the status element
   peerConnection.ondatachannel = (event) => {
     const dataChannel = event.channel;
     dataChannel.onmessage = onMessage;
   };
 
-  // Set server's SDP as remote description
   const remoteDescription = new RTCSessionDescription(serverSdp);
   await peerConnection.setRemoteDescription(remoteDescription);
 
@@ -65,7 +58,6 @@ async function createNewSession() {
   updateStatus(statusElement, 'Now.You can click the start button to start the stream');
 }
 
-// Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -74,11 +66,9 @@ async function startAndDisplaySession() {
 
   updateStatus(statusElement, 'Starting session... please wait');
 
-  // Create and set local SDP description
   const localDescription = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(localDescription);
 
- // When ICE candidate is available, send to the server
   peerConnection.onicecandidate = ({ candidate }) => {
     console.log('Received ICE candidate:', candidate);
     if (candidate) {
@@ -86,7 +76,6 @@ async function startAndDisplaySession() {
     }
   };
 
-  // When ICE connection state changes, display the new state
   peerConnection.oniceconnectionstatechange = (event) => {
     updateStatus(
       statusElement,
@@ -94,17 +83,11 @@ async function startAndDisplaySession() {
     );
   };
 
-
-
-  // Start session
   await startSession(sessionInfo.session_id, localDescription);
 
    updateStatus(statusElement, 'Session started successfully');
 }
 
-const taskInput = document.querySelector('#taskInput');
-
-// When clicking the "Send Task" button, get the content from the input field, then send the tas
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -123,11 +106,11 @@ async function repeatHandler() {
 }
 
 async function talkHandler() {
- // FIXME: uncomment this and const resp when deploying
-  if (!sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    return;
-  }
+  //FIXME: comment this
+  // if (!sessionInfo) {
+  //   updateStatus(statusElement, 'Please create a connection first');
+  //   return;
+  // }
   const prompt = document.querySelector('#taskInput').value;
   const character = document.querySelector('#characterSelect').value;
   if (prompt.trim() === '') {
@@ -141,10 +124,8 @@ async function talkHandler() {
     const text = await talkToOpenAI(prompt,character);
     console.log(text);
     if (text) {
-      // Send the AI's response to Heygen's streaming.task API
-     const resp = await repeat(sessionInfo.session_id, text);
+      //const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
-      // Display the AI's response in the status element
       updateStatus(statusElement, `LLM response: ${text}`);
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
@@ -155,8 +136,6 @@ async function talkHandler() {
   }
 }
 
-
-// when clicking the "Close" button, close the connection
 async function closeConnectionHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -170,12 +149,8 @@ async function closeConnectionHandler() {
 
   updateStatus(statusElement, 'Closing connection... please wait');
   try {
-    // Close local connection
     peerConnection.close();
-    // Call the close interface
     const resp = await stopSession(sessionInfo.session_id);
-
-    console.log(resp);
   } catch (err) {
     console.error('Failed to close the connection:', err);
   }
@@ -188,8 +163,6 @@ document.querySelector('#repeatBtn').addEventListener('click', repeatHandler);
 document.querySelector('#closeBtn').addEventListener('click', closeConnectionHandler);
 document.querySelector('#talkBtn').addEventListener('click', talkHandler);
 
-
-// new session
 async function newSession(quality, avatar_name, voice_id) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.new`, {
     method: 'POST',
@@ -220,7 +193,6 @@ async function newSession(quality, avatar_name, voice_id) {
   }
 }
 
-// start the session
 async function startSession(session_id, sdp) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.start`, {
     method: 'POST',
@@ -243,7 +215,6 @@ async function startSession(session_id, sdp) {
   }
 }
 
-// submit the ICE candidate
 async function handleICE(session_id, candidate) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.ice`, {
     method: 'POST',
@@ -267,7 +238,6 @@ async function handleICE(session_id, candidate) {
 }
 
 async function talkToOpenAI(prompt, character) {
-  // Assuming your server expects a 'prompt' and 'character' in the body
   const response = await fetch(`/openai/complete`, {
     method: 'POST',
     headers: {
@@ -282,9 +252,6 @@ async function talkToOpenAI(prompt, character) {
   return data.text;
 }
 
-
-
-// repeat the text
 async function repeat(session_id, text) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.task`, {
     method: 'POST',
@@ -307,7 +274,6 @@ async function repeat(session_id, text) {
   }
 }
 
-// stop session
 async function stopSession(session_id) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.stop`, {
     method: 'POST',
@@ -327,11 +293,10 @@ async function stopSession(session_id) {
   }
 }
 
-
 const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
 removeBGCheckbox.addEventListener('click', () => {
-  const isChecked = removeBGCheckbox.checked; // status after click
-  
+  const isChecked = removeBGCheckbox.checked; 
+
   if (isChecked && !sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     removeBGCheckbox.checked = false;
@@ -391,9 +356,7 @@ function renderCanvas() {
       const green = data[i + 1];
       const blue = data[i + 2];
 
-      // You can implement your own logic here
       if (isCloseToGreen([red, green, blue])) {
-        // if (isCloseToGray([red, green, blue])) {
         data[i + 3] = 0;
       }
     }
@@ -438,13 +401,18 @@ bgInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Access the user's webcam// This function sets up the webcam stream and the MediaRecorder
 function setupWebcamAndRecorder() {
   const webcamElement = document.getElementById('webcamElement');
 
   navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
-          webcamElement.srcObject = stream;
+          const videoTracks = stream.getVideoTracks();
+          const audioTracks = stream.getAudioTracks();
+
+          if (videoTracks.length > 0) {
+              webcamElement.srcObject = new MediaStream(videoTracks);
+          }
+
           setupRecording(stream);
       })
       .catch(error => {
@@ -452,7 +420,6 @@ function setupWebcamAndRecorder() {
       });
 }
 
-// This function sets up the recording using MediaRecorder
 function setupRecording(stream) {
   const mediaRecorder = new MediaRecorder(stream);
   let videoChunks = [];
@@ -473,21 +440,18 @@ function setupRecording(stream) {
       updateStatus(statusElement, 'Recording stopped');
   };
 
-  // Automatically start recording
   mediaRecorder.start();
   startRecordingBtn.textContent = 'Stop Recording';
   startRecordingBtn.classList.add('recording');
   console.log('Recording started');
   updateStatus(statusElement, 'Recording started');
 
-  // Change to stop recording on button click
   startRecordingBtn.onclick = () => {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
   };
 
-  // Automatically stop recording after 10 seconds
   setTimeout(() => {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
@@ -495,8 +459,6 @@ function setupRecording(stream) {
   }, 10000);
 }
 
-
-// This function sends the video blob to the server
 function sendVideoToServer(blob) {
   const formData = new FormData();
   formData.append('video', blob, 'recordedVideo.mp4');
@@ -508,7 +470,6 @@ function sendVideoToServer(blob) {
   .then(response => response.json())
   .then(data => {
       console.log('Server response:', data.message);
-      // Start transcription process after successful upload
       startTranscription();
   })
   .catch(error => {
@@ -517,7 +478,7 @@ function sendVideoToServer(blob) {
 }
 
 function startTranscription() {
-  const videoPath = 'uploads/video.mp4'; // Update this path if necessary
+  const videoPath = 'uploads/video.mp4';
   fetch('/transcribe-audio', {
       method: 'POST',
       headers: {
@@ -528,9 +489,8 @@ function startTranscription() {
   .then(response => response.json())
   .then(data => {
       console.log('Transcription:', data.transcription);
-      taskInput.value = data.transcription; // Ensure `taskInput` is correctly defined in your scope
+      taskInput.value = data.transcription;
       document.querySelector('#talkBtn').click();
-      
   })
   .catch(error => console.error('Error transcribing video:', error));
 }
