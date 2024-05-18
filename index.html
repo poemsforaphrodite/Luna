@@ -1,87 +1,86 @@
 <!doctype html>
 <html>
-  <head>
-    <link rel="stylesheet" href="index.css" />
-    <link rel="icon" href="./favicon.ico" />
-  </head>
-
-  <body>
-    <div class="main">
-      <div class="actionRowsWrap">
-        <div class="actionRow">
-          <label>
-            AvatarID
-            <input id="avatarID" type="text" />
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shadcn-ui/dist/shadcn-ui.min.css">
+  <link rel="stylesheet" href="index.css">
+  <link rel="icon" href="./favicon.ico">
+</head>
+<body class="dark">
+  <div class="container mx-auto p-6 bg-container rounded-lg shadow-md">
+    <div class="space-y-6">
+      <div class="space-y-4">
+        <div class="flex space-x-4">
+          <label class="flex flex-col">
+            <span class="text">AvatarID</span>
+            <input id="avatarID" type="text" class="shadcn-input mt-1">
           </label>
-
-
-          <label>
-            VoiceID
-            <input id="voiceID" type="text" />
+          <label class="flex flex-col">
+            <span class="text">VoiceID</span>
+            <input id="voiceID" type="text" class="shadcn-input mt-1">
           </label>
-
-          <button id="newBtn">New</button>
-          <button id="startBtn">Start</button>
-          <button id="closeBtn">Close</button>
-          <button id="startRecordingBtn" class="button">Start Recording</button>
         </div>
-
-        <div class="actionRow">
-          <label>
-            Message
-            <input id="taskInput" type="text" />
-          </label>
-          <button id="repeatBtn">Repeat</button>
-          <button id="talkBtn">Talk</button>
+        <div class="flex space-x-4">
+          <button id="newBtn" class="shadcn-button">New</button>
+          <button id="startBtn" class="shadcn-button">Start</button>
+          <button id="closeBtn" class="shadcn-button">Close</button>
+          <button id="startRecordingBtn" class="shadcn-button">Start Recording</button>
         </div>
-        <div class="actionRow">
-          <label>
-            Select Character Role:
-            <select id="characterSelect">
-              <option value="Psychologist">Psychologist</option>
-              <option value="Salesman">Salesman</option>
-              <option value="Customer Service">Customer Service</option>
-            </select>
-          </label>
-          <button id="setCharacterBtn">Set Character</button>
-        </div>
-        
       </div>
 
-      <p id="status"></p>
+      <div class="space-y-4">
+        <div class="flex space-x-4">
+          <label class="flex flex-col">
+            <span class="text">Message</span>
+            <input id="taskInput" type="text" class="shadcn-input mt-1">
+          </label>
+          <button id="repeatBtn" class="shadcn-button">Repeat</button>
+          <button id="talkBtn" class="shadcn-button">Talk</button>
+        </div>
+      </div>
 
-      <div class="videoSectionWrap">
-        <div class="videoWrap">
-          <video id="mediaElement" class="videoEle show" autoplay></video>
-          <canvas id="canvasElement" class="videoEle hide"></canvas>
+      <div class="space-y-4">
+        <label class="flex flex-col">
+          <span class="text">Select Character Role:</span>
+          <select id="characterSelect" class="shadcn-select mt-1">
+            <option value="Psychologist">Psychologist</option>
+            <option value="Salesman">Salesman</option>
+            <option value="Customer Service">Customer Service</option>
+          </select>
+        </label>
+        <button id="setCharacterBtn" class="shadcn-button">Set Character</button>
+      </div>
+
+      <p id="status" class="shadcn-status p-4 rounded-lg"></p>
+
+      <div class="space-y-4">
+        <div class="relative">
+          <div class="videoWrap">
+            <video id="mediaElement" class="videoEle show w-full h-auto rounded-lg shadow-md" autoplay></video>
+            <canvas id="canvasElement" class="videoEle hide w-full h-auto rounded-lg shadow-md"></canvas>
+          </div>
+          <div class="webcamWrap absolute top-0 right-0 w-1/4 h-1/4 border-2 bg-webcam rounded-lg shadow-md">
+            <video id="webcamElement" class="webcamEle w-full h-full" autoplay></video>
+          </div>
         </div>
 
-        <!-- Webcam video element -->
-        <div class="webcamWrap">
-          <video id="webcamElement" class="webcamEle" autoplay></video>
-        </div>
-
-        <div class="actionRow switchRow hide" id="bgCheckboxWrap">
-          <div class="switchWrap">
-            <span>Remove background</span>
+        <div class="space-y-4 hide" id="bgCheckboxWrap">
+          <div class="flex items-center space-x-4">
+            <span class="text">Remove background</span>
             <label class="switch">
-              <input type="checkbox" id="removeBGCheckbox" />
+              <input type="checkbox" id="removeBGCheckbox">
               <span class="slider round"></span>
             </label>
           </div>
 
-          <label>
-            Background (CSS)
-            <input
-              type="text"
-              id="bgInput"
-              value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat'
-            />
+          <label class="flex flex-col">
+            <span class="text">Background (CSS)</span>
+            <input type="text" id="bgInput" value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat' class="shadcn-input mt-1">
           </label>
         </div>
       </div>
     </div>
+  </div>
 
-    <script type="module" src="index.js"></script>
-  </body>
+  <script type="module" src="index.js"></script>
+</body>
 </html>
