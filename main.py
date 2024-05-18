@@ -4,7 +4,6 @@ import subprocess
 import realeyes.emotion_detection as em
 import realeyes.demographic_estimation as de
 
-hello
 # Function to extract frames from video at specified frame rate
 def extract_frames(video_path, output_folder, frame_rate=0.3):
     if not os.path.exists(output_folder):
