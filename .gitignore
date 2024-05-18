@@ -1,6 +1,6 @@
-uploads
 node_modules
 venv
+uploads
 .idea
 .vscode
 .env
