@@ -5,7 +5,7 @@ import realeyes.emotion_detection as em
 import realeyes.demographic_estimation as de
 
 # Function to extract frames from video at specified frame rate
-def extract_frames(video_path, output_folder, frame_rate=0.3):
+def extract_frames(video_path, output_folder, frame_rate=0.1):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -19,13 +19,13 @@ def extract_frames(video_path, output_folder, frame_rate=0.3):
 
 # Function to filter and display specific emotions
 def display_relevant_emotions(emotions):
-    relevant_emotions = ['Happy', 'Attention']
-
+    #put them in a list [EmotionData(emotion_id=Happy, is_detection_succesful=True, is_active=False, probability=0.413628), EmotionData(emotion_id=Confusion, is_detection_succesful=True, is_active=False, probability=0.260519), EmotionData(emotion_id=Disgust, is_detection_succesful=True, is_active=False, probability=0.348471), EmotionData(emotion_id=Contempt, is_detection_succesful=True, is_active=False, probability=0.358540), EmotionData(emotion_id=Surprise, is_detection_succesful=True, is_active=False, probability=0.331225), EmotionData(emotion_id=Empathy, is_detection_succesful=True, is_active=False, probability=0.359904), EmotionData(emotion_id=Eyes_on, is_detection_succesful=True, is_active=True, probability=0.938580), EmotionData(emotion_id=Attention, is_detection_succesful=True, is_active=True, probability=0.610099), EmotionData(emotion_id=Presence, is_detection_succesful=True, is_active=False, probability=0.822588), EmotionData(emotion_id=Face_detection, is_detection_succesful=True, is_active=True, probability=0.818441)]
+    relevant_emotions = ['Happy', 'Attention', 'Confusion', 'Disgust', 'Contempt', 'Surprise', 'Empathy', 'Eyes_on', 'Presence', 'Face_detection']
     for emotion in emotions:
         emotion_id_str = str(emotion.emotion_id)
         emotion_name = emotion_id_str.split('.')[-1]  # Extract the part after 'EmotionID.'
         if emotion_name in relevant_emotions:
-            print(f"{emotion_name}, {emotion.probability}")
+            print(f"{emotion_name} {emotion.probability}")
 
 # Function to process each frame for emotion detection and demographic estimation
 def process_frames(frame_folder):
@@ -39,7 +39,7 @@ def process_frames(frame_folder):
 
         emotions = tr.track(img, 0)
         display_relevant_emotions(emotions.emotions)
-
+        #print(emotions.emotions[0].emotion_id, emotions.emotions[0].probability)
         faces = estimator.detect_faces(img)
         for face in faces:
             estimations = estimator.estimate(face)
@@ -48,7 +48,7 @@ def process_frames(frame_folder):
                     age = estimation.value
                 elif estimation.name == "gender":
                     gender = estimation.value
-            print(f"Age: {age}, Gender: {gender}")
+            print(f"{age}\n{gender}")
 
 # Main function
 def main():

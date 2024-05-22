@@ -8,6 +8,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
 const fs = require('fs');
 const FormData = require('form-data');
+const { exec } = require('child_process');
 
 
 app.use(express.json());
@@ -39,42 +40,103 @@ app.post('/upload-video', upload.single('video'), (req, res) => {
   }
 });
 
-// Route for handling OpenAI completions
+let previousAge;
+let previousGender;
+
 app.post('/openai/complete', async (req, res) => {
+  let happyStatus;
+  let attentionStatus;
+  let ageStatus;
+  let genderStatus;
+  
+  exec('python3 main.py', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Execution error: ${error}`);
+      res.status(500).send('Error executing Python script');
+      return;
+    }
+    if (stderr) {
+      console.error(`Python script stderr: ${stderr}`);
+    }
+    if (stdout) {
+      console.log(`Python script stdout: ${stdout}`);
+      const lines = stdout.trim().split('\n');
+      const happyValue = parseFloat(lines[0].split(' ')[1]);
+      const confusionValue = parseFloat(lines[1].split(' ')[1]);
+      const disgustValue = parseFloat(lines[2].split(' ')[1]);
+      const contemptValue = parseFloat(lines[3].split(' ')[1]);
+      const surpriseValue = parseFloat(lines[4].split(' ')[1]);
+      const empathyValue = parseFloat(lines[5].split(' ')[1]);
+      const eyesOnValue = parseFloat(lines[6].split(' ')[1]);
+      const attentionValue = parseFloat(lines[7].split(' ')[1]);
+      const presenceValue = parseFloat(lines[8].split(' ')[1]);
+      const ageValue = parseInt(lines[9]);
+      const genderValue = lines[lines.length - 1].split('.')[1];
+
+
+      happyStatus = happyValue > 0.5 ? 'The user is happy.' : 'The user is not happy.';
+      attentionStatus = attentionValue > 0.5 ? 'The user is attentive.' : 'The user is not attentive.';
+
+      if (previousAge !== undefined && previousAge !== ageValue) {
+        ageStatus = `The user's age has changed to ${ageValue}.`;
+      } else {
+        ageStatus = `The user's age is ${ageValue}.`;
+      }
+
+      if (previousGender !== undefined && previousGender !== genderValue) {
+        genderStatus = `The user's gender has changed to ${genderValue}.`;
+      } else {
+        genderStatus = `The user's gender is ${genderValue}.`;
+      }
+
+      previousAge = ageValue;
+      previousGender = genderValue;
+
+      console.log('Happy status:', happyStatus);
+      console.log('Attention status:', attentionStatus);
+      console.log('Age status:', ageStatus);
+      console.log('Gender status:', genderStatus);
+    }
+  });
   const { prompt, character } = req.body;
 
   // Set system prompt based on the character
-  let systemPrompt;
+  let initialSystemPrompt = 'if the user is not happy, ask them what is wrong. if they are not attentive say that "you are not paying attention, whats up" , address the age and gender of the user. Address if the age and gender of the user changes with something like "you are new", guess the age of the user in the first response';
   switch (character) {
     case 'Psychologist':
-      systemPrompt = "You are a psychologist.";
+      initialSystemPrompt += "You are a psychologist.";
       break;
     case 'Salesman':
-      systemPrompt = "You are a salesman.";
+      initialSystemPrompt += "You are a salesman.";
       break;
     case 'Customer Service':
-      systemPrompt = "You are a customer service representative.";
+      initialSystemPrompt += "You are a customer service representative.";
       break;
     default:
-      systemPrompt = "You are an assistant."; // Default role if none specified
+      initialSystemPrompt += "You are an assistant."; // Default role if none specified
       break;
   }
 
-  try {
-    const chatCompletion = await openai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ],
-      model: 'gpt-3.5-turbo',
-    });
-    res.json({ text: chatCompletion.choices[0].message.content });
-  } catch (error) {
-    console.error('Error calling OpenAI:', error);
-    res.status(500).send('Error processing your request');
-  }
-});
+  // Wait for the Python script to complete
+  setTimeout(async () => {
+    const fullPrompt = `${prompt} ${happyStatus}`;
+    const systemPrompt = initialSystemPrompt +  `${initialSystemPrompt} ${attentionStatus} ${ageStatus} ${genderStatus}`;
+    try {
+      const chatCompletion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: fullPrompt },
+        ],
+      });
 
+      res.json({ text: chatCompletion.choices[0].message.content });
+    } catch (error) {
+      console.error('Error calling OpenAI:', error);
+      res.status(500).send('Error processing your request');
+    }
+  }, 2000); // Adjust the delay as necessary to ensure the Python script has finished
+});
 app.post('/transcribe-audio', async (req, res) => {
   const { videoPath } = req.body; // Make sure this is the correct path to the video file
   const audioPath = `uploads/audio.mp3`;
