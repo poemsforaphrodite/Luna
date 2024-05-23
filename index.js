@@ -107,10 +107,10 @@ async function repeatHandler() {
 
 async function talkHandler() {
   //FIXME: comment this
-  // if (!sessionInfo) {
-  //   updateStatus(statusElement, 'Please create a connection first');
-  //   return;
-  // }
+  if (!sessionInfo) {
+    updateStatus(statusElement, 'Please create a connection first');
+    return;
+  }
   const prompt = document.querySelector('#taskInput').value;
   const character = document.querySelector('#characterSelect').value;
   if (prompt.trim() === '') {
@@ -119,12 +119,12 @@ async function talkHandler() {
   }
 
   updateStatus(statusElement, 'Talking to LLM... please wait');
-
+  
+  // Simulate the click to start recording
   try {
-    const text = await talkToOpenAI(prompt,character);
+    const text = await talkToOpenAI(prompt, character);
     console.log(text);
     if (text) {
-      //const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
       updateStatus(statusElement, `LLM response: ${text}`);
     } else {
@@ -248,7 +248,7 @@ async function talkToOpenAI(prompt, character) {
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
-  const data = await response.json();
+  const data = await response.json(); 
   return data.text;
 }
 
@@ -270,6 +270,7 @@ async function repeat(session_id, text) {
     throw new Error('Server error');
   } else {
     const data = await response.json();
+    document.getElementById('startRecordingBtn').click();
     return data.data;
   }
 }
@@ -456,14 +457,14 @@ function setupRecording(stream) {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
-  }, 10000);
+  }, 15000);
 }
 
 function sendVideoToServer(blob) {
   const formData = new FormData();
   formData.append('video', blob, 'recordedVideo.mp4');
 
-  fetch('http://localhost:3000/upload-video', {
+  fetch('https://glorious-goldfish-gvx7r9qvr5pcvrjv-3000.app.github.dev/upload-video', {
       method: 'POST',
       body: formData
   })

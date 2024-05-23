@@ -10,7 +10,7 @@ const fs = require('fs');
 const FormData = require('form-data');
 const { exec } = require('child_process');
 
-//test
+// Test
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
@@ -30,6 +30,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// In-memory message history store
+const messageHistory = {};
+
+const getUserSessionId = (req) => req.headers['session-id'] || 'default';
+
 // Route for handling video uploads
 app.post('/upload-video', upload.single('video'), (req, res) => {
   if (req.file) {
@@ -44,6 +49,11 @@ let previousAge;
 let previousGender;
 
 app.post('/openai/complete', async (req, res) => {
+  const sessionId = getUserSessionId(req);
+  if (!messageHistory[sessionId]) {
+    messageHistory[sessionId] = [];
+  }
+  
   let happyStatus;
   let attentionStatus;
   let ageStatus;
@@ -73,11 +83,10 @@ app.post('/openai/complete', async (req, res) => {
       const ageValue = parseInt(lines[9]);
       const genderValue = lines[lines.length - 1].split('.')[1];
 
-
       happyStatus = happyValue > 0.5 ? 'The user is happy.' : 'The user is not happy.';
       attentionStatus = attentionValue > 0.5 ? 'The user is attentive.' : 'The user is not attentive.';
 
-      if (previousAge !== undefined && previousAge !== ageValue) {
+      if (previousAge !== undefined && (ageValue < previousAge - 5 || ageValue > previousAge + 5)) {
         ageStatus = `The user's age has changed to ${ageValue}.`;
       } else {
         ageStatus = `The user's age is ${ageValue}.`;
@@ -98,6 +107,7 @@ app.post('/openai/complete', async (req, res) => {
       console.log('Gender status:', genderStatus);
     }
   });
+
   const { prompt, character } = req.body;
 
   // Set system prompt based on the character
@@ -121,82 +131,90 @@ app.post('/openai/complete', async (req, res) => {
   setTimeout(async () => {
     const fullPrompt = `${prompt} ${happyStatus}`;
     const systemPrompt = initialSystemPrompt +  `${initialSystemPrompt} ${attentionStatus} ${ageStatus} ${genderStatus}`;
+
+    // Add the new message to the history
+    messageHistory[sessionId].push({ role: 'user', content: fullPrompt });
+
+    // Construct the conversation history
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...messageHistory[sessionId]
+    ];
+
     try {
       const chatCompletion = await openai.chat.completions.create({
         model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: fullPrompt },
-        ],
+        messages: messages,
       });
 
-      res.json({ text: chatCompletion.choices[0].message.content });
+      const responseMessage = chatCompletion.choices[0].message.content;
+
+      // Add the response to the history
+      messageHistory[sessionId].push({ role: 'assistant', content: responseMessage });
+
+      res.json({ text: responseMessage });
     } catch (error) {
       console.error('Error calling OpenAI:', error);
       res.status(500).send('Error processing your request');
     }
   }, 2000); // Adjust the delay as necessary to ensure the Python script has finished
 });
+
 app.post('/transcribe-audio', async (req, res) => {
   const { videoPath } = req.body; // Make sure this is the correct path to the video file
   const audioPath = `uploads/audio.mp3`;
 
   extractAudio(videoPath, audioPath, async (error) => {
-      if (error) {
-          console.error('Error extracting audio:', error);
-          return res.status(500).send('Failed to extract audio');
-      }
+    if (error) {
+      console.error('Error extracting audio:', error);
+      return res.status(500).send('Failed to extract audio');
+    }
 
-      try {
-          const transcription = await transcribeAudioWithWhisper(audioPath);
-          fs.unlink(audioPath, () => console.log('Audio file removed:', audioPath)); // Optionally remove the audio file
-          res.json({ transcription: transcription });
-      } catch (err) {
-          console.error('Transcription error:', err);
-          res.status(500).send('Failed to transcribe audio');
-      }
+    try {
+      const transcription = await transcribeAudioWithWhisper(audioPath);
+      fs.unlink(audioPath, () => console.log('Audio file removed:', audioPath)); // Optionally remove the audio file
+      res.json({ transcription: transcription });
+    } catch (err) {
+      console.error('Transcription error:', err);
+      res.status(500).send('Failed to transcribe audio');
+    }
   });
 });
 
 async function transcribeAudioWithWhisper(audioPath) {
   if (!fs.existsSync(audioPath)) {
-      console.error('File does not exist:', audioPath);
-      return null;
+    console.error('File does not exist:', audioPath);
+    return null;
   }
 
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(audioPath),
     model: "whisper-1",
   }).catch(err => {
-      console.error('Whisper API error:', err);
-      return null;
+    console.error('Whisper API error:', err);
+    return null;
   });
   
   return transcription.text;
 }
 
-
-
-
 // Function to extract audio from video
 function extractAudio(videoPath, audioPath, callback) {
-    ffmpeg(videoPath)
-        .setFfmpegPath(ffmpegStatic) // Sets the path to the ffmpeg binary
-        .output(audioPath)           // Specifies the output filename
-        .audioCodec('libmp3lame')    // Use the MP3 codec
-        .noVideo()                   // Strip out the video part
-        .on('end', function() {
-            console.log('Audio extraction completed.');
-            callback(null);          // No error, callback with null
-        })
-        .on('error', function(err) {
-            console.error('Error during audio extraction:', err.message);
-            callback(err);           // Callback with error
-        })
-        .run();                      // Run the ffmpeg command
+  ffmpeg(videoPath)
+    .setFfmpegPath(ffmpegStatic) // Sets the path to the ffmpeg binary
+    .output(audioPath)           // Specifies the output filename
+    .audioCodec('libmp3lame')    // Use the MP3 codec
+    .noVideo()                   // Strip out the video part
+    .on('end', function() {
+      console.log('Audio extraction completed.');
+      callback(null);          // No error, callback with null
+    })
+    .on('error', function(err) {
+      console.error('Error during audio extraction:', err.message);
+      callback(err);           // Callback with error
+    })
+    .run();                      // Run the ffmpeg command
 }
-
-
 
 app.listen(3000, function () {
   console.log('App is listening on port 3000!');
