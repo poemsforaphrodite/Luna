@@ -119,14 +119,14 @@ async function talkHandler() {
   }
 
   updateStatus(statusElement, 'Talking to LLM... please wait');
-  
-  // Simulate the click to start recording
+
   try {
     const text = await talkToOpenAI(prompt, character);
     console.log(text);
     if (text) {
       updateStatus(statusElement, 'LLM response sent successfully');
       updateStatus(statusElement, `LLM response: ${text}`);
+      const resp = await repeat(sessionInfo.session_id, text);
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
@@ -271,6 +271,7 @@ async function repeat(session_id, text) {
   } else {
     const data = await response.json();
     document.getElementById('startRecordingBtn').click();
+    console.log(data);
     return data.data;
   }
 }

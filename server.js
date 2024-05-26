@@ -157,7 +157,7 @@ app.post('/openai/complete', async (req, res) => {
       console.error('Error calling OpenAI:', error);
       res.status(500).send('Error processing your request');
     }
-  }, 2000); // Adjust the delay as necessary to ensure the Python script has finished
+  }, 0); // Adjust the delay as necessary to ensure the Python script has finished
 });
 
 app.post('/transcribe-audio', async (req, res) => {
