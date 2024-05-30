@@ -84,6 +84,7 @@ input {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  margin-right: 20%;
 }
 
 .actionRow.switchRow {
@@ -110,6 +111,7 @@ input {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-right: 150px;
 
   /*background: linear-gradient(0deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.02) 100%),*/
   /*  radial-gradient(*/

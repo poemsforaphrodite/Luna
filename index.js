@@ -269,12 +269,15 @@ async function repeat(session_id, text) {
     );
     throw new Error('Server error');
   } else {
-    const data = await response.json();
-    document.getElementById('startRecordingBtn').click();
-    console.log(data);
-    return data.data;
+    setTimeout(async () => { // Add setTimeout to delay execution
+      const data = await response.json();
+      document.getElementById('startRecordingBtn').click();
+      console.log(data);
+      return data.data;
+    }, 15000); // Delay in milliseconds (10000 ms = 10 seconds)
   }
 }
+
 
 async function stopSession(session_id) {
   const response = await fetch(`${SERVER_URL}/v1/streaming.stop`, {
@@ -458,7 +461,7 @@ function setupRecording(stream) {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
-  }, 15000);
+  }, 5000);
 }
 
 function sendVideoToServer(blob) {
