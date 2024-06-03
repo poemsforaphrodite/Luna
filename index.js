@@ -469,7 +469,7 @@ function sendVideoToServer(blob) {
   const formData = new FormData();
   formData.append('video', blob, 'recordedVideo.mp4');
 
-  fetch('https://glorious-goldfish-gvx7r9qvr5pcvrjv-3000.app.github.dev/upload-video', {
+  fetch('https://luna-azure.vercel.app/upload-video', {
       method: 'POST',
       body: formData
   })
