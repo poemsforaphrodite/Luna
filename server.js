@@ -10,7 +10,7 @@ const fs = require('fs');
 const FormData = require('form-data');
 const { exec } = require('child_process');
 
-// Test
+// testt
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
@@ -114,10 +114,10 @@ app.post('/openai/complete', async (req, res) => {
   let initialSystemPrompt = 'if the user is not happy, ask them what is wrong. if they are not attentive say that "you are not paying attention, whats up" , address the age and gender of the user. Address if the age and gender of the user changes with something like "you are new", guess the age of the user in the first response';
   switch (character) {
     case 'Psychologist':
-      initialSystemPrompt += "You are a psychologist.";
+      initialSystemPrompt += "You are a psychologist. Ask the user how they are feeling. Act like a proper psychologist.";
       break;
     case 'Salesman':
-      initialSystemPrompt += "You are a salesman.";
+      initialSystemPrompt += "You are a salesman. Please act like a salesman.";
       break;
     case 'Customer Service':
       initialSystemPrompt += "You are a customer service representative.";

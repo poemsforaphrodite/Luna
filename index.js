@@ -4,6 +4,7 @@ const heygen_API = {
   apiKey: 'ZWU5NjgwYjI5Yzk2NDhjYjliYzE0YzI4ODM5ZDlkMGEtMTcxMTc1ODQ4Mw==',
   serverUrl: 'https://api.heygen.com',
 };
+//YTg2NGQ2NDQyNTBjNGQ4YWEyZDZmMzgzMWE5YjAxY2ItMTcxNzA4ODY2NQ==
 
 const statusElement = document.querySelector('#status');
 const apiKey = heygen_API.apiKey;
