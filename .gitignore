@@ -4,3 +4,4 @@ uploads
 .idea
 .vscode
 .env
+.env.local
