@@ -216,6 +216,6 @@ function extractAudio(videoPath, audioPath, callback) {
     .run();                      // Run the ffmpeg command
 }
 
-app.listen(3000, function () {
+app.listen(5000, function () {
   console.log('App is listening on port 3000!');
 });
