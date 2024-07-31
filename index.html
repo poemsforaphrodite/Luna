@@ -1,87 +1,125 @@
 <!doctype html>
-<html>
-  <head>
-    <link rel="stylesheet" href="index.css" />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Avatar Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
     <link rel="icon" href="./favicon.ico" />
-  </head>
-
-  <body>
-    <div class="main">
-      <div class="actionRowsWrap">
-        <div class="actionRow">
-          <label>
-            AvatarID
-            <input id="avatarID" type="text" />
-          </label>
-
-
-          <label>
-            VoiceID
-            <input id="voiceID" type="text" />
-          </label>
-
-          <button id="newBtn">New</button>
-          <button id="startBtn">Start</button>
-          <button id="closeBtn">Close</button>
-          <button id="startRecordingBtn" class="button">Start Recording</button>
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="main container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6 text-center">AI Avatar Control Panel</h1>
+        <div class="actionRowsWrap bg-white shadow-md rounded-lg p-6 mb-6">
+            <div class="actionRow grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label for="avatarID" class="block text-sm font-medium text-gray-700">AvatarID</label>
+                    <input id="avatarID" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+                </div>
+                <div>
+                    <label for="voiceID" class="block text-sm font-medium text-gray-700">VoiceID</label>
+                    <input id="voiceID" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+                </div>
+                <div class="flex space-x-2">
+                    <button id="newBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">New</button>
+                    <button id="startBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</button>
+                    <button id="closeBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Close</button>
+                    <button id="startRecordingBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">Start Recording</button>
+                </div>
+            </div>
+            <div class="actionRow grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="taskInput" class="block text-sm font-medium text-gray-700">Message</label>
+                    <input id="taskInput" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+                </div>
+                <div class="flex space-x-2">
+                    <button id="repeatBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">Repeat</button>
+                    <button id="talkBtn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Talk</button>
+                </div>
+            </div>
+            <div class="actionRow grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="characterSelect" class="block text-sm font-medium text-gray-700">Select Character Role:</label>
+                    <select id="characterSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="Psychologist">Psychologist</option>
+                        <option value="Salesman">Salesman</option>
+                        <option value="Customer Service">Customer Service</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button id="setCharacterBtn" class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">Set Character</button>
+                </div>
+            </div>
         </div>
-
-        <div class="actionRow">
-          <label>
-            Message
-            <input id="taskInput" type="text" />
-          </label>
-          <button id="repeatBtn">Repeat</button>
-          <button id="talkBtn">Talk</button>
+        <p id="status" class="text-center text-lg font-semibold mb-4"></p>
+        <div class="videoSectionWrap grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="videoWrap bg-black rounded-lg overflow-hidden">
+                <video id="mediaElement" class="videoEle show w-full h-auto" autoplay></video>
+                <canvas id="canvasElement" class="videoEle hide w-full h-auto"></canvas>
+            </div>
+            <div class="webcamWrap bg-black rounded-lg overflow-hidden">
+                <video id="webcamElement" class="webcamEle w-full h-auto" autoplay></video>
+            </div>
         </div>
-        <div class="actionRow">
-          <label>
-            Select Character Role:
-            <select id="characterSelect">
-              <option value="Psychologist">Psychologist</option>
-              <option value="Salesman">Salesman</option>
-              <option value="Customer Service">Customer Service</option>
-            </select>
-          </label>
-          <button id="setCharacterBtn">Set Character</button>
+        <div class="actionRow switchRow hide mt-4" id="bgCheckboxWrap">
+            <div class="switchWrap flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-700">Remove background</span>
+                <label class="switch">
+                    <input type="checkbox" id="removeBGCheckbox" />
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="mt-2">
+                <label for="bgInput" class="block text-sm font-medium text-gray-700">Background (CSS)</label>
+                <input type="text" id="bgInput" value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat' class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+            </div>
         </div>
-        
-      </div>
-
-      <p id="status"></p>
-
-      <div class="videoSectionWrap">
-        <div class="videoWrap">
-          <video id="mediaElement" class="videoEle show" autoplay></video>
-          <canvas id="canvasElement" class="videoEle hide"></canvas>
-        </div>
-
-        <!-- Webcam video element -->
-        <div class="webcamWrap">
-          <video id="webcamElement" class="webcamEle" autoplay></video>
-        </div>
-
-        <div class="actionRow switchRow hide" id="bgCheckboxWrap">
-          <div class="switchWrap">
-            <span>Remove background</span>
-            <label class="switch">
-              <input type="checkbox" id="removeBGCheckbox" />
-              <span class="slider round"></span>
-            </label>
-          </div>
-
-          <label>
-            Background (CSS)
-            <input
-              type="text"
-              id="bgInput"
-              value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat'
-            />
-          </label>
-        </div>
-      </div>
     </div>
-
     <script type="module" src="index.js"></script>
-  </body>
+</body>
 </html>

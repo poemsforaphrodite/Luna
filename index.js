@@ -438,6 +438,7 @@ function setupRecording(stream) {
   };
 
   mediaRecorder.onstop = () => {
+      console.log(videoChunks)
       const blob = new Blob(videoChunks, { type: 'video/mp4' });
       sendVideoToServer(blob);
       startRecordingBtn.textContent = 'Start Recording';
@@ -469,7 +470,7 @@ function sendVideoToServer(blob) {
   const formData = new FormData();
   formData.append('video', blob, 'recordedVideo.mp4');
 
-  fetch('https://localhost:3000/upload-video', {
+  fetch('/upload-video', {
       method: 'POST',
       body: formData
   })

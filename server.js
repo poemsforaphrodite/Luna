@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, 
+  apiKey: process.env['OPENAI_API_KEY'], 
 });
 
 // Setup Multer for handling file uploads
@@ -59,7 +59,7 @@ app.post('/openai/complete', async (req, res) => {
   let ageStatus;
   let genderStatus;
   
-  exec('python3 main.py', (error, stdout, stderr) => {
+  exec('python main.py', (error, stdout, stderr) => {
     if (error) {
       console.error(`Execution error: ${error}`);
       res.status(500).send('Error executing Python script');
